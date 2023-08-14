@@ -1,0 +1,89 @@
+import { Button, VerticalBox , HorizontalBox, ListView} from "std-widgets.slint";
+
+export struct file_info {
+    locked: bool,
+    file_name: string,
+    file_ver: string,
+}
+
+component FileInfo inherits HorizontalLayout {
+    in property<file_info> info :  {
+        locked: true,
+        file_name: "My File.mer",
+        file_ver: "12.0",
+    };
+
+    in property<color> background;
+    padding: 5px;
+    height: 48px;
+
+    Rectangle {
+        border-width: 1px;
+        HorizontalLayout {
+            lbl := Text {
+                text: "\{info.file_name}: (v\{info.file_ver})";
+                vertical-alignment: center;
+                //height: 1rem;
+                font-weight: 900;
+                horizontal-stretch: 1;
+                font-size: 10pt;
+            }
+            icon := Image {
+                source: info.locked ? @image-url("../assets/icons/protected.svg" ) : @image-url("../assets/icons/unlocked.svg");
+                colorize: info.locked ? #ff4343 : #107c10;
+                height: 100%;
+                width: self.height;
+                y: 1px;
+                horizontal-stretch: 0;
+            }
+        }
+    }
+}
+
+export component AppWindow inherits Window {
+    min-height: 320px;
+    min-width: 480px;
+    //in property<[file_info]> files;
+    in property<[file_info]> files : [
+        {
+            locked: true,
+            file_name: "My File1.mer",
+            file_ver: "8.0",
+        },
+        {
+            locked: true,
+            file_name: "My File2.mer",
+            file_ver: "12.0",
+        },
+        {
+            locked: false,
+            file_name: "My File3.mer",
+            file_ver: "13.0",
+        },
+        {
+            locked: false,
+            file_name: "My File4.mer",
+            file_ver: "8.12",
+        },
+        {
+            locked: true,
+            file_name: "My File5.mer",
+            file_ver: "12.0",
+        },
+        {
+            locked: false,
+            file_name: "My File6.mer",
+            file_ver: "12.0",
+        },
+    ];
+    vl := VerticalLayout {
+        ListView {
+            for f_info[idx] in files : FileInfo {
+                info: f_info;
+            }
+        }
+        Button {
+            text: "Select Files";
+        }
+    }
+}

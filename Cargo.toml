@@ -1,0 +1,29 @@
+[package]
+name = "pv-unlocker"
+version = "0.1.0"
+authors = ["Carl <carl@vadoola.com>"]
+edition = "2021"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+slint = "1.1"
+ab_versions = {git = "https://github.com/Vadoola/ab_versions_rs.git"}
+clap = { version = "4.3", features = ["derive"] }
+rayon = "1.5"
+wild = "2.1"
+
+[build-dependencies]
+slint-build = "1.1"
+
+[profile.release]
+#https://github.com/johnthagen/min-sized-rust
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+#panic = "abort"
+
+[target.'cfg(windows)'.build-dependencies]
+windres = "0.2.2"
