@@ -13,7 +13,8 @@ component FileInfo inherits HorizontalLayout {
         file_ver: "12.0",
     };
 
-    in property<color> background;
+    //in property<color> background;
+    property<color> icon-color: info.locked ? #ff4343 : #107c10;
     padding: 5px;
     height: 48px;
 
@@ -30,11 +31,27 @@ component FileInfo inherits HorizontalLayout {
             }
             icon := Image {
                 source: info.locked ? @image-url("../assets/icons/protected.svg" ) : @image-url("../assets/icons/unlocked.svg");
-                colorize: info.locked ? #ff4343 : #107c10;
+                colorize: icon-color;
                 height: 100%;
                 width: self.height;
                 y: 1px;
                 horizontal-stretch: 0;
+
+                icn-ta := TouchArea {
+
+                }
+
+                states [ 
+                    clicked when icn-ta.pressed: {
+                        colorize: icon-color.darker(0.4);
+                    }
+                    hvr when icn-ta.has-hover : {
+                        colorize: icon-color.brighter(0.4);
+                    }
+                    not-hvr when !icn-ta.has-hover : {
+                        colorize: icon-color;
+                    }
+                 ]
             }
         }
     }
