@@ -1,2 +1,2 @@
-//exe-icon ICON "assets/icons/logo.ico"
-//logo-icon ICON "assets/icons/logo.ico"
+exe-icon ICON "assets/icons/logo.ico"
+logo-icon ICON "assets/icons/logo.ico"

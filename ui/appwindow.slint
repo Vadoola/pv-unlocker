@@ -65,41 +65,11 @@ component FileInfo inherits HorizontalLayout {
 export component AppWindow inherits Window {
     min-height: 320px;
     min-width: 480px;
-    //in property<[file_info]> files;
-    in property<[file_info]> files : [
-        {
-            locked: true,
-            file_name: "My File1.mer",
-            file_ver: "8.0",
-        },
-        {
-            locked: true,
-            file_name: "My File2.mer",
-            file_ver: "12.0",
-        },
-        {
-            locked: false,
-            file_name: "My File3.mer",
-            file_ver: "13.0",
-        },
-        {
-            locked: false,
-            file_name: "My File4.mer",
-            file_ver: "8.12",
-        },
-        {
-            locked: true,
-            file_name: "My File5.mer",
-            file_ver: "12.0",
-        },
-        {
-            locked: false,
-            file_name: "My File6.mer",
-            file_ver: "12.0",
-        },
-    ];
+    icon: @image-url("../assets/icons/logo.png");
+    in property<[file_info]> files;
 
     callback unlock(string, int);
+    callback select_files();
 
     vl := VerticalLayout {
         ListView {
@@ -110,6 +80,7 @@ export component AppWindow inherits Window {
         }
         Button {
             text: "Select Files";
+            clicked => { select_files(); }
         }
     }
 }
