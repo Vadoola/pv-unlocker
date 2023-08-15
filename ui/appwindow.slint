@@ -99,13 +99,13 @@ export component AppWindow inherits Window {
         },
     ];
 
-    callback unlock(string);
+    callback unlock(string, int);
 
     vl := VerticalLayout {
         ListView {
             for f_info[idx] in files : FileInfo {
                 info: f_info;
-                unlock => { unlock(f_info.file_name); }
+                unlock => { unlock(f_info.file_name, idx); }
             }
         }
         Button {

@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use ab_versions::{get_version, is_protected, strip_protection};
-use slint::{ModelRc, VecModel};
+use slint::{ModelRc, VecModel, Model};
 use std::rc::Rc;
 use std::collections::HashMap;
 
@@ -24,13 +24,12 @@ slint::include_modules!();
 
 fn main() -> Result<(), slint::PlatformError> {
     let args = Args::parse_from(wild::args());
-
-    let ui = AppWindow::new()?;
-    let files: HashMap<String, PathBuf> = args.files.iter().map(|pb| {
+    let files: HashMap<String, PathBuf> = args.files.into_iter().map(|pb| {
         let name = pb.file_name().map(|name| name.to_string_lossy()).unwrap().to_string();
-        (name, pb.to_owned())
+        (name, pb)
     }).collect();
 
+    let ui = AppWindow::new()?;
     let mut file_model = Rc::new(VecModel::default());
 
     //if files were passed on the command line process them and add them to the UI model
@@ -45,29 +44,24 @@ fn main() -> Result<(), slint::PlatformError> {
         file_model.borrow_mut().extend(info.into_iter());
     }
 
-    ui.set_files(ModelRc::from(file_model));
 
-    let unlock_handle = ui.as_weak();
-    ui.on_unlock(move |file| {
-        let unlock_handle = unlock_handle.upgrade().unwrap();
+    ui.set_files(ModelRc::from(file_model.clone()));
+
+    let unlock_file_model = file_model.clone();
+    ui.on_unlock(move |file, idx| {
 
         if let Some(path) = files.get(&file.to_string()) {
             strip_protection(path).unwrap();
-            /*let mdl = unlock_handle.get_files();
-            let name = file.clone();
-            mdl.map(move |mut fi| {
-                if fi.file_name == name {
-                    fi.locked = is_protected(path).unwrap();
-                }
-            });*/
+
+            //After attempting to unlock it update the model with the new protected status
+            //by verifying it in the file on disk
+            let unlock_file_model = unlock_file_model.as_ref();
+            if let Some(mut row_data) = unlock_file_model.row_data(idx as usize) {
+                row_data.locked = is_protected(&path).unwrap();
+                unlock_file_model.set_row_data(idx as usize, row_data);
+            }//else...hmm error updating the model?...what to do?
         }//else display some sort of toast message with the error?
     });
 
     ui.run()
 }
-
-/*
-let model: Rc<VecModel<JsonTheme>> = Rc::new(VecModel::from(themes));
-
-        ModelRc::from(marg
-         */
