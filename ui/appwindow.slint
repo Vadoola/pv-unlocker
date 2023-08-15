@@ -9,12 +9,14 @@ export struct file_info {
 component FileInfo inherits HorizontalLayout {
     in property<file_info> info :  {
         locked: true,
-        file_name: "My File.mer",
-        file_ver: "12.0",
+        file-name: "My File.mer",
+        file-ver: "12.0",
     };
 
-    //in property<color> background;
     property<color> icon-color: info.locked ? #ff4343 : #107c10;
+
+    callback unlock(string);
+
     padding: 5px;
     height: 48px;
 
@@ -24,7 +26,6 @@ component FileInfo inherits HorizontalLayout {
             lbl := Text {
                 text: "\{info.file_name}: (v\{info.file_ver})";
                 vertical-alignment: center;
-                //height: 1rem;
                 font-weight: 900;
                 horizontal-stretch: 1;
                 font-size: 10pt;
@@ -38,20 +39,24 @@ component FileInfo inherits HorizontalLayout {
                 horizontal-stretch: 0;
 
                 icn-ta := TouchArea {
-
+                    clicked => {
+                        if (info.locked) {
+                            unlock(info.file-name)
+                        }
+                    }
                 }
 
-                states [ 
-                    clicked when icn-ta.pressed: {
+                states [
+                    clicked when icn-ta.pressed && info.locked: {
                         colorize: icon-color.darker(0.4);
                     }
-                    hvr when icn-ta.has-hover : {
+                    hvr when icn-ta.has-hover && info.locked : {
                         colorize: icon-color.brighter(0.4);
                     }
                     not-hvr when !icn-ta.has-hover : {
                         colorize: icon-color;
                     }
-                 ]
+                ]
             }
         }
     }
@@ -93,10 +98,14 @@ export component AppWindow inherits Window {
             file_ver: "12.0",
         },
     ];
+
+    callback unlock(string);
+
     vl := VerticalLayout {
         ListView {
             for f_info[idx] in files : FileInfo {
                 info: f_info;
+                unlock => { unlock(f_info.file_name); }
             }
         }
         Button {
