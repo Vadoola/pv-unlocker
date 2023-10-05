@@ -4,25 +4,69 @@ export struct file_info {
     locked: bool,
     file_name: string,
     file_ver: string,
+    note: string,
+    note_vis: bool,
+}
+
+component SlideOver inherits Rectangle {
+    in property<string> info: "test string";
+    visible: false;
+    VerticalLayout {
+        Rectangle {
+            Text {
+                text: info;
+                vertical-alignment: center;
+                font-weight: 900;
+                horizontal-stretch: 1;
+                font-size: 10pt;
+            }
+        }
+        Rectangle {
+            height: 2%;
+            width: 100%;
+            background: yellow;
+        }
+    }
 }
 
 component FileInfo inherits HorizontalLayout {
-    in property<file_info> info :  {
+
+    in-out property<file_info> info :  {
         locked: true,
         file-name: "My File.mer",
         file-ver: "12.0",
+        note: "test",
+        note_vis: false,
     };
 
     property<color> icon-color: info.locked ? #ff4343 : #107c10;
 
     callback unlock(string);
+    callback slide-over();
 
     padding: 5px;
-    height: 48px;
+    height: 50px;
 
     Rectangle {
         border-width: 1px;
-        HorizontalLayout {
+        inf-so := SlideOver {
+            info: root.info.note;
+            visible: info.note-vis;
+            states [
+                vis when self.visible : {
+                    x: 0px;
+                }
+                not-vis when !self.visible : {
+                    x: root.width * -1;
+                }
+            ]
+
+            animate x {
+                duration: 1000ms;
+                easing: ease-in-out;
+            }
+        }
+        HorizontalBox {
             lbl := Text {
                 text: "\{info.file_name}: (v\{info.file_ver})";
                 vertical-alignment: center;
@@ -30,12 +74,25 @@ component FileInfo inherits HorizontalLayout {
                 horizontal-stretch: 1;
                 font-size: 10pt;
             }
+            info-icon := Image {
+                //this circle question icon is a temporary one while I'm offline, I just had it on my machine
+                source: @image-url("../assets/icons/circle-question.svg");
+                colorize: yellow;
+                height: 100%;
+                width: self.height;
+                visible: info.note != "";
+                info-ta := TouchArea {
+                    clicked => {
+                        slide-over();
+                    }
+                }
+            }
             icon := Image {
-                source: info.locked ? @image-url("../assets/icons/protected.svg" ) : @image-url("../assets/icons/unlocked.svg");
+                source: info.locked ? @image-url("../assets/icons/protected.svg") : @image-url("../assets/icons/unlocked.svg");
                 colorize: icon-color;
                 height: 100%;
                 width: self.height;
-                y: 1px;
+                //y: 1px;
                 horizontal-stretch: 0;
 
                 icn-ta := TouchArea {
@@ -58,6 +115,20 @@ component FileInfo inherits HorizontalLayout {
                     }
                 ]
             }
+
+            states [
+                vis when !inf-so.visible : {
+                    x: 0px;
+                }
+                not-vis when inf-so.visible : {
+                    x: root.width;
+                }
+            ]
+
+            animate x {
+                duration: 1000ms;
+                easing: ease-in-out;
+            }
         }
     }
 }
@@ -70,12 +141,14 @@ export component AppWindow inherits Window {
 
     callback unlock(string, int);
     callback select_files();
+    callback slide_over(int);
 
     vl := VerticalLayout {
         ListView {
             for f_info[idx] in files : FileInfo {
                 info: f_info;
                 unlock => { unlock(f_info.file_name, idx); }
+                slide-over => { slide-over(idx); }
             }
         }
         Button {

@@ -11,7 +11,7 @@ use log::error;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rfd::FileDialog;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger, WriteLogger};
-use slint::{Model, ModelRc, VecModel};
+use slint::{Model, ModelRc, Timer, TimerMode, VecModel};
 use std::{
     borrow::BorrowMut, cell::RefCell, collections::HashMap, fs::File, path::PathBuf, rc::Rc,
 };
@@ -99,6 +99,30 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
+    let info_file_model_start = file_model.clone();
+    //let info_timer = vec![Timer::default(); file_model.row_count()];
+    let mut info_timers: Vec<Timer> = (0..file_model.row_count()).map(|_i|Timer::default()).collect();
+    ui.on_slide_over(move |idx| {
+        let idx = idx as usize;
+        if idx >= info_timers.len() {
+            info_timers.extend((info_timers.len()..idx+1).map(|_| Timer::default()));
+        }
+        let info_file_model_stop = info_file_model_start.clone();
+        let info_file_model_start = info_file_model_start.as_ref();
+        if let Some(mut fi) = info_file_model_start.row_data(idx) {
+            fi.note_vis = true;
+            info_file_model_start.set_row_data(idx, fi);
+        }
+        info_timers[idx].start(TimerMode::SingleShot, std::time::Duration::from_secs(3), move || {
+            let info_file_model_stop = info_file_model_stop.clone();
+            let info_file_model_stop = info_file_model_stop.as_ref();
+            if let Some(mut fi) = info_file_model_stop.row_data(idx) {
+                fi.note_vis = false;
+                info_file_model_stop.set_row_data(idx, fi);
+            }
+        })
+    });
+
     ui.run()
 }
 
@@ -123,12 +147,16 @@ fn process_paths(files: Vec<PathBuf>) -> HashMap<String, PathBuf> {
 fn get_file_info(files: &HashMap<String, PathBuf>) -> Vec<file_info> {
     files
         .par_iter()
+        //need to do this differently....what if the version is older than 5 there the is_protected
+        //would return an error...but I still want to display the version
         .filter_map(|(name, file)| match is_protected(&file) {
             Ok(lckd) => match get_version(&file) {
                 Ok(ver) => Some(file_info {
                     locked: lckd,
                     file_name: name.into(),
                     file_ver: ver.to_string().into(),
+                    note: "test".into(),
+                    note_vis: false,
                 }),
                 Err(e) => {
                     error!(
@@ -143,7 +171,14 @@ fn get_file_info(files: &HashMap<String, PathBuf>) -> Vec<file_info> {
                     "Unable to get file information from {}. Reason: {e}",
                     file.display()
                 );
-                None
+                //None
+                Some(file_info {
+                    locked: true,
+                    file_name: name.into(),
+                    file_ver: get_version(&file).unwrap().to_string().into(),
+                    note: "test".into(),
+                    note_vis: false,
+                })
             }
         })
         .collect()
