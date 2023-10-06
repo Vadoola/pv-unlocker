@@ -24,7 +24,7 @@ component SlideOver inherits Rectangle {
         Rectangle {
             height: 2%;
             width: 100%;
-            background: yellow;
+            background: #F7630C;
         }
     }
 }
@@ -76,9 +76,9 @@ component FileInfo inherits HorizontalLayout {
             }
             info-icon := Image {
                 //this circle question icon is a temporary one while I'm offline, I just had it on my machine
-                source: @image-url("../assets/icons/circle-question.svg");
-                colorize: yellow;
-                height: 100%;
+                source: @image-url("../assets/icons/info.svg");
+                colorize: #F7630C;
+                height: 80%;
                 width: self.height;
                 visible: info.note != "";
                 info-ta := TouchArea {

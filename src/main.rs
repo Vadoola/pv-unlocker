@@ -7,7 +7,7 @@
 
 use ab_versions::{get_version, is_protected, strip_protection};
 use clap::Parser;
-use log::error;
+use log::{error, Record};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rfd::FileDialog;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger, WriteLogger};
@@ -100,7 +100,6 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     let info_file_model_start = file_model.clone();
-    //let info_timer = vec![Timer::default(); file_model.row_count()];
     let mut info_timers: Vec<Timer> = (0..file_model.row_count()).map(|_i|Timer::default()).collect();
     ui.on_slide_over(move |idx| {
         let idx = idx as usize;
@@ -113,7 +112,7 @@ fn main() -> Result<(), slint::PlatformError> {
             fi.note_vis = true;
             info_file_model_start.set_row_data(idx, fi);
         }
-        info_timers[idx].start(TimerMode::SingleShot, std::time::Duration::from_secs(3), move || {
+        info_timers[idx].start(TimerMode::SingleShot, std::time::Duration::from_secs(10), move || {
             let info_file_model_stop = info_file_model_stop.clone();
             let info_file_model_stop = info_file_model_stop.as_ref();
             if let Some(mut fi) = info_file_model_stop.row_data(idx) {
@@ -149,7 +148,50 @@ fn get_file_info(files: &HashMap<String, PathBuf>) -> Vec<file_info> {
         .par_iter()
         //need to do this differently....what if the version is older than 5 there the is_protected
         //would return an error...but I still want to display the version
-        .filter_map(|(name, file)| match is_protected(&file) {
+        .filter_map(|(name, file)| match get_version(&file) {
+            Ok(ver) => {
+                let note = if ver.is_old() {
+                    if ver.is_restorable() {
+                        "As an old MER some features may not restore correctly."
+                    } else {
+                        "Restoring a file this old is currently unsupported."
+                    }
+                } else {
+                    ""
+                };
+
+                let lckd = if ver.is_restorable() {
+                    match is_protected(&file) {
+                        Ok(prot) => prot,
+                        Err(e) => {
+                            error!(
+                                "Unable to get file protected status from {}. Reason: {e}",
+                                file.display()
+                            );
+                            true
+                        }
+                    }
+                } else {
+                    true
+                };
+
+                Some(file_info {
+                    locked: lckd,
+                    file_name: name.into(),
+                    file_ver: ver.to_string().into(),
+                    note: note.into(),
+                    note_vis: false,
+                })
+            }
+            Err(e) => {
+                error!(
+                    "Unable to get file version from {}, file may not be a valid MER/APA file. Reason: {e}",
+                    file.display()
+                );
+                None
+            }
+        })
+        /*.filter_map(|(name, file)| match is_protected(&file) {
             Ok(lckd) => match get_version(&file) {
                 Ok(ver) => Some(file_info {
                     locked: lckd,
@@ -180,6 +222,6 @@ fn get_file_info(files: &HashMap<String, PathBuf>) -> Vec<file_info> {
                     note_vis: false,
                 })
             }
-        })
+        })*/
         .collect()
 }
