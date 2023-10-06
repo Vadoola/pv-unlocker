@@ -22,7 +22,7 @@ component SlideOver inherits Rectangle {
             }
         }
         Rectangle {
-            height: 2%;
+            height: 5%;
             width: 100%;
             background: #F7630C;
         }
@@ -79,6 +79,7 @@ component FileInfo inherits HorizontalLayout {
                 source: @image-url("../assets/icons/info.svg");
                 colorize: #F7630C;
                 height: 80%;
+                y: (root.height - self.height) / 2;
                 width: self.height;
                 visible: info.note != "";
                 info-ta := TouchArea {

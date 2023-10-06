@@ -7,7 +7,7 @@
 
 use ab_versions::{get_version, is_protected, strip_protection};
 use clap::Parser;
-use log::{error, Record};
+use log::error;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rfd::FileDialog;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger, WriteLogger};
@@ -57,30 +57,49 @@ fn main() -> Result<(), slint::PlatformError> {
 
     let unlock_file_model = file_model.clone();
     let unlock_files = files.clone();
+    let unlock_ui = ui.as_weak();
     ui.on_unlock(move |file, idx| {
         if let Some(path) = unlock_files.borrow().get(&file.to_string()) {
-            match strip_protection(path) {
-                Ok(_) => {
-                    //After attempting to unlock it update the model with the new protected status
-                    //by verifying it in the file on disk
+            if let Ok(ver) = get_version(path) {
+                if ver.is_restorable() {
                     let unlock_file_model = unlock_file_model.as_ref();
-                    if let Some(mut row_data) = unlock_file_model.row_data(idx as usize) {
-                        match is_protected(&path) {
-                            Ok(lck) => {
-                                row_data.locked = lck;
-                                unlock_file_model.set_row_data(idx as usize, row_data);
+                    match strip_protection(path) {
+                        Ok(()) => {
+                            //After attempting to unlock it update the model with the new protected status
+                            //by verifying it in the file on disk
+                            if let Some(mut row_data) = unlock_file_model.row_data(idx as usize) {
+                                match is_protected(&path) {
+                                    Ok(lck) => {
+                                        row_data.locked = lck;
+                                        unlock_file_model.set_row_data(idx as usize, row_data);
+                                    }
+                                    Err(e) => {
+                                        error!(
+                                            "Unable to confirm file {} was unlocked. Reason: {e}",
+                                            path.display()
+                                        );
+                                        if let Some(unlock_ui) = unlock_ui.upgrade() {
+                                            row_data.note = "Unable to confirm file was unlocked".into();
+                                            unlock_file_model.set_row_data(idx as usize, row_data);
+                                            unlock_ui.invoke_slide_over(idx);
+                                        }
+                                    }
+                                }
                             }
-                            Err(e) => {
-                                error!(
-                                    "Unable to confirm file {} was unlocked. Reason: {e}",
-                                    path.display()
-                                )
+                        }
+                        Err(e) => {
+                            error!("Failed to unlock file {}. Reason: {e}", path.display());
+                            if let Some(mut row_data) = unlock_file_model.row_data(idx as usize) {
+                                if let Some(unlock_ui) = unlock_ui.upgrade() {
+                                    row_data.note = "Failed to unlock file".into();
+                                    unlock_file_model.set_row_data(idx as usize, row_data);
+                                    unlock_ui.invoke_slide_over(idx);
+                                }
                             }
                         }
                     }
-                }
-                Err(e) => {
-                    error!("Failed to unlock file {}. Reason: {e}", path.display())
+                } else if let Some(unlock_ui) = unlock_ui.upgrade() {
+                    unlock_ui.invoke_slide_over(idx);
                 }
             }
         } //else display some sort of toast message with the error?
@@ -112,14 +131,14 @@ fn main() -> Result<(), slint::PlatformError> {
             fi.note_vis = true;
             info_file_model_start.set_row_data(idx, fi);
         }
-        info_timers[idx].start(TimerMode::SingleShot, std::time::Duration::from_secs(10), move || {
+        info_timers[idx].start(TimerMode::SingleShot, std::time::Duration::from_secs(5), move || {
             let info_file_model_stop = info_file_model_stop.clone();
             let info_file_model_stop = info_file_model_stop.as_ref();
             if let Some(mut fi) = info_file_model_stop.row_data(idx) {
                 fi.note_vis = false;
                 info_file_model_stop.set_row_data(idx, fi);
             }
-        })
+        });
     });
 
     ui.run()
@@ -146,8 +165,6 @@ fn process_paths(files: Vec<PathBuf>) -> HashMap<String, PathBuf> {
 fn get_file_info(files: &HashMap<String, PathBuf>) -> Vec<file_info> {
     files
         .par_iter()
-        //need to do this differently....what if the version is older than 5 there the is_protected
-        //would return an error...but I still want to display the version
         .filter_map(|(name, file)| match get_version(&file) {
             Ok(ver) => {
                 let note = if ver.is_old() {
@@ -191,37 +208,5 @@ fn get_file_info(files: &HashMap<String, PathBuf>) -> Vec<file_info> {
                 None
             }
         })
-        /*.filter_map(|(name, file)| match is_protected(&file) {
-            Ok(lckd) => match get_version(&file) {
-                Ok(ver) => Some(file_info {
-                    locked: lckd,
-                    file_name: name.into(),
-                    file_ver: ver.to_string().into(),
-                    note: "test".into(),
-                    note_vis: false,
-                }),
-                Err(e) => {
-                    error!(
-                        "Unable to get file information from {}. Reason: {e}",
-                        file.display()
-                    );
-                    None
-                }
-            },
-            Err(e) => {
-                error!(
-                    "Unable to get file information from {}. Reason: {e}",
-                    file.display()
-                );
-                //None
-                Some(file_info {
-                    locked: true,
-                    file_name: name.into(),
-                    file_ver: get_version(&file).unwrap().to_string().into(),
-                    note: "test".into(),
-                    note_vis: false,
-                })
-            }
-        })*/
         .collect()
 }
