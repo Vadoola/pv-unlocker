@@ -1,3 +1,5 @@
+# UPDATE 2025-03-13: If you are running a newer version of FT View / Application Manager or the Patch RollUps restoring runtimes "fixed" with this tool, no longer restore. They will continue to restore with older versions of FR View, although I'm not sure exactly at which version, or patch rollup things changed. See [Issue #7](https://github.com/Vadoola/ab_versions_rs/issues/7) for more.
+
 # PV Unlocker
 
 This is a program used to check the version of an MER PanelView runtime or FactoryTalk View PanelView archive file (APA). If the MER is locked or marked as Never allow conversion back into a Project file. This can strip that, and allow the project to be recovered.
