@@ -1,3 +1,5 @@
+# UPDATE 2025-08-21: The solution for getting the MERs to restore with newer versions of FT Application Manager appears to have been solved. I've proven it manually, but I need to do a bit more testing, and finish making code changes. Look for a new release soon that resolves this issue.
+
 # UPDATE 2025-03-13: If you are running a newer version of FT View / Application Manager or the Patch RollUps restoring runtimes "fixed" with this tool, no longer restore. They will continue to restore with older versions of FT View, although I'm not sure exactly at which version, or patch rollup things changed. See [Issue #7](https://github.com/Vadoola/ab_versions_rs/issues/7) for more.
 
 # PV Unlocker
