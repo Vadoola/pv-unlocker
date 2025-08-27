@@ -1,6 +1,6 @@
 [package]
 name = "pv-unlocker"
-version = "0.9.0"
+version = "0.9.1"
 authors = ["Carl <carl@vadoola.com>"]
 edition = "2024"
 build = "build.rs"
@@ -9,7 +9,7 @@ build = "build.rs"
 
 [dependencies]
 slint = "1.12.1"
-ab_versions = {git = "https://github.com/Vadoola/ab_versions_rs.git", tag = "v0.10.0"}
+ab_versions = {git = "https://github.com/Vadoola/ab_versions_rs.git", tag = "v0.10.1"}
 clap = { version = "4.5", features = ["derive"] }
 rayon = "1.11"
 wild = "2.2"

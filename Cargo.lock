@@ -20,8 +20,8 @@ checksum = "366ffbaa4442f4684d91e2cd7c5ea7c4ed8add41959a31447066e279e432b618"
 
 [[package]]
 name = "ab_versions"
-version = "0.10.0"
-source = "git+https://github.com/Vadoola/ab_versions_rs.git?tag=v0.10.0#b0b638267989334d1bb8efb42163b86c3600da1f"
+version = "0.10.1"
+source = "git+https://github.com/Vadoola/ab_versions_rs.git?tag=v0.10.1#b3bfc27464f18dff2a9a91cbc0d9145f77cbc576"
 dependencies = [
  "cfb",
  "crc32fast",
@@ -3682,7 +3682,7 @@ dependencies = [
 
 [[package]]
 name = "pv-unlocker"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "ab_versions",
  "clap",
