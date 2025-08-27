@@ -2,23 +2,23 @@
 name = "pv-unlocker"
 version = "0.8.0"
 authors = ["Carl <carl@vadoola.com>"]
-edition = "2021"
+edition = "2024"
 build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-slint = "1.2.1"
-ab_versions = {git = "https://github.com/Vadoola/ab_versions_rs.git"}
-clap = { version = "4.3", features = ["derive"] }
-rayon = "1.5"
-wild = "2.1"
-rfd = { version = "0.12", default-features = false, features = ["xdg-portal"]}
-log = "0.4.20"
-simplelog = "0.12.1"
+slint = "1.12.1"
+ab_versions = {git = "https://github.com/Vadoola/ab_versions_rs.git", tag = "v0.10.0"}
+clap = { version = "4.5", features = ["derive"] }
+rayon = "1.11"
+wild = "2.2"
+rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "async-std"] }
+log = "0.4"
+simplelog = "0.12.2"
 
 [build-dependencies]
-slint-build = "1.2.1"
+slint-build = "1.12.1"
 
 [profile.release]
 #https://github.com/johnthagen/min-sized-rust
