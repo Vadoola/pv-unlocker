@@ -26,14 +26,6 @@ slint::include_modules!();
 
 fn main() -> Result<(), slint::PlatformError> {
     CombinedLogger::init(vec![
-        #[cfg(feature = "termcolor")]
-        TermLogger::new(
-            LevelFilter::Warn,
-            Config::default(),
-            TerminalMode::Mixed,
-            ColorChoice::Auto,
-        ),
-        #[cfg(not(feature = "termcolor"))]
         SimpleLogger::new(LevelFilter::Warn, Config::default()),
         WriteLogger::new(
             LevelFilter::Info,
@@ -79,7 +71,8 @@ fn main() -> Result<(), slint::PlatformError> {
                                             path.display()
                                         );
                                         if let Some(unlock_ui) = unlock_ui.upgrade() {
-                                            row_data.note = "Unable to confirm file was unlocked".into();
+                                            row_data.note =
+                                                "Unable to confirm file was unlocked".into();
                                             unlock_file_model.set_row_data(idx as usize, row_data);
                                             unlock_ui.invoke_slide_over(idx);
                                         }
@@ -119,11 +112,13 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     let info_file_model_start = file_model.clone();
-    let mut info_timers: Vec<Timer> = (0..file_model.row_count()).map(|_i|Timer::default()).collect();
+    let mut info_timers: Vec<Timer> = (0..file_model.row_count())
+        .map(|_i| Timer::default())
+        .collect();
     ui.on_slide_over(move |idx| {
         let idx = idx as usize;
         if idx >= info_timers.len() {
-            info_timers.extend((info_timers.len()..idx+1).map(|_| Timer::default()));
+            info_timers.extend((info_timers.len()..idx + 1).map(|_| Timer::default()));
         }
         let info_file_model_stop = info_file_model_start.clone();
         let info_file_model_start = info_file_model_start.as_ref();
@@ -131,14 +126,18 @@ fn main() -> Result<(), slint::PlatformError> {
             fi.note_vis = true;
             info_file_model_start.set_row_data(idx, fi);
         }
-        info_timers[idx].start(TimerMode::SingleShot, std::time::Duration::from_secs(5), move || {
-            let info_file_model_stop = info_file_model_stop.clone();
-            let info_file_model_stop = info_file_model_stop.as_ref();
-            if let Some(mut fi) = info_file_model_stop.row_data(idx) {
-                fi.note_vis = false;
-                info_file_model_stop.set_row_data(idx, fi);
-            }
-        });
+        info_timers[idx].start(
+            TimerMode::SingleShot,
+            std::time::Duration::from_secs(5),
+            move || {
+                let info_file_model_stop = info_file_model_stop.clone();
+                let info_file_model_stop = info_file_model_stop.as_ref();
+                if let Some(mut fi) = info_file_model_stop.row_data(idx) {
+                    fi.note_vis = false;
+                    info_file_model_stop.set_row_data(idx, fi);
+                }
+            },
+        );
     });
 
     ui.run()

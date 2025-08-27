@@ -9,7 +9,7 @@ export struct file_info {
 }
 
 component SlideOver inherits Rectangle {
-    in property<string> info: "test string";
+    in property <string> info: "test string";
     visible: false;
     VerticalLayout {
         Rectangle {
@@ -21,6 +21,7 @@ component SlideOver inherits Rectangle {
                 font-size: 10pt;
             }
         }
+
         Rectangle {
             height: 5%;
             width: 100%;
@@ -31,15 +32,16 @@ component SlideOver inherits Rectangle {
 
 component FileInfo inherits HorizontalLayout {
 
-    in-out property<file_info> info :  {
+    in-out property <file_info> info:  {
         locked: true,
         file-name: "My File.mer",
         file-ver: "12.0",
         note: "test",
-        note_vis: false,
+        note_vis
+ : false,
     };
 
-    property<color> icon-color: info.locked ? #ff4343 : #107c10;
+    property <color> icon-color: info.locked ? #ff4343 : #107c10;
 
     callback unlock(string);
     callback slide-over();
@@ -53,10 +55,10 @@ component FileInfo inherits HorizontalLayout {
             info: root.info.note;
             visible: info.note-vis;
             states [
-                vis when self.visible : {
+                vis when self.visible: {
                     x: 0px;
                 }
-                not-vis when !self.visible : {
+                not-vis when !self.visible: {
                     x: root.width * -1;
                 }
             ]
@@ -66,6 +68,7 @@ component FileInfo inherits HorizontalLayout {
                 easing: ease-in-out;
             }
         }
+
         HorizontalBox {
             lbl := Text {
                 text: "\{info.file_name}: (v\{info.file_ver})";
@@ -74,6 +77,7 @@ component FileInfo inherits HorizontalLayout {
                 horizontal-stretch: 1;
                 font-size: 10pt;
             }
+
             info-icon := Image {
                 //this circle question icon is a temporary one while I'm offline, I just had it on my machine
                 source: @image-url("../assets/icons/info.svg");
@@ -88,6 +92,7 @@ component FileInfo inherits HorizontalLayout {
                     }
                 }
             }
+
             icon := Image {
                 source: info.locked ? @image-url("../assets/icons/protected.svg") : @image-url("../assets/icons/unlocked.svg");
                 colorize: icon-color;
@@ -108,20 +113,20 @@ component FileInfo inherits HorizontalLayout {
                     clicked when icn-ta.pressed && info.locked: {
                         colorize: icon-color.darker(0.4);
                     }
-                    hvr when icn-ta.has-hover && info.locked : {
+                    hvr when icn-ta.has-hover && info.locked: {
                         colorize: icon-color.brighter(0.4);
                     }
-                    not-hvr when !icn-ta.has-hover : {
+                    not-hvr when !icn-ta.has-hover: {
                         colorize: icon-color;
                     }
                 ]
             }
 
             states [
-                vis when !inf-so.visible : {
+                vis when !inf-so.visible: {
                     x: 0px;
                 }
-                not-vis when inf-so.visible : {
+                not-vis when inf-so.visible: {
                     x: root.width;
                 }
             ]
@@ -138,7 +143,7 @@ export component AppWindow inherits Window {
     min-height: 320px;
     min-width: 480px;
     icon: @image-url("../assets/icons/logo.png");
-    in property<[file_info]> files;
+    in property <[file_info]> files;
 
     callback unlock(string, int);
     callback select_files();
@@ -146,15 +151,22 @@ export component AppWindow inherits Window {
 
     vl := VerticalLayout {
         ListView {
-            for f_info[idx] in files : FileInfo {
+            for f_info[idx] in files: FileInfo {
                 info: f_info;
-                unlock => { unlock(f_info.file_name, idx); }
-                slide-over => { slide-over(idx); }
+                unlock => {
+                    unlock(f_info.file_name, idx);
+                }
+                slide-over => {
+                    slide-over(idx);
+                }
             }
         }
+
         Button {
             text: "Select Files";
-            clicked => { select_files(); }
+            clicked => {
+                select_files();
+            }
         }
     }
 }
