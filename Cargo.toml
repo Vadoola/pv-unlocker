@@ -1,6 +1,6 @@
 [package]
 name = "pv-unlocker"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Carl <carl@vadoola.com>"]
 edition = "2024"
 build = "build.rs"

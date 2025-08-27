@@ -30,7 +30,7 @@ fn main() -> Result<(), slint::PlatformError> {
         WriteLogger::new(
             LevelFilter::Info,
             Config::default(),
-            File::create("my_rust_binary.log").expect("Failed to create log file"),
+            File::create("pv-unlocker.log").expect("Failed to create log file"),
         ),
     ])
     .expect("Failed to create logging infrastructure");
