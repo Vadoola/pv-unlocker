@@ -1,9 +1,4 @@
 #![windows_subsystem = "windows"]
-//#![deny(clippy::all)]
-//#![deny(clippy::pedantic)]
-//#![deny(clippy::nursery)]
-//#![deny(clippy::cargo)]
-//#![deny(missing_docs)]
 
 use ab_versions::{get_version, is_protected, strip_protection};
 use clap::Parser;
@@ -51,49 +46,55 @@ fn main() -> Result<(), slint::PlatformError> {
     let unlock_files = files.clone();
     let unlock_ui = ui.as_weak();
     ui.on_unlock(move |file, idx| {
-        if let Some(path) = unlock_files.borrow().get(&file.to_string()) {
-            if let Ok(ver) = get_version(path) {
-                if ver.is_restorable() {
-                    let unlock_file_model = unlock_file_model.as_ref();
-                    match strip_protection(path) {
-                        Ok(()) => {
-                            //After attempting to unlock it update the model with the new protected status
-                            //by verifying it in the file on disk
-                            if let Some(mut row_data) = unlock_file_model.row_data(idx as usize) {
-                                match is_protected(&path) {
-                                    Ok(lck) => {
-                                        row_data.locked = lck;
-                                        unlock_file_model.set_row_data(idx as usize, row_data);
-                                    }
-                                    Err(e) => {
-                                        error!(
-                                            "Unable to confirm file {} was unlocked. Reason: {e}",
-                                            path.display()
-                                        );
-                                        if let Some(unlock_ui) = unlock_ui.upgrade() {
-                                            row_data.note =
-                                                "Unable to confirm file was unlocked".into();
-                                            unlock_file_model.set_row_data(idx as usize, row_data);
-                                            unlock_ui.invoke_slide_over(idx);
-                                        }
-                                    }
+        // Slint doesn't have a usize or unsigned int type, so it's either an i32
+        // or a float. It uses an i32 for indexing in a for loop...but then I need that
+        // as a usize to access the model
+        #[allow(clippy::cast_sign_loss)]
+        let idxu = idx as usize;
+
+        if let Some(path) = unlock_files.borrow().get(&file.to_string())
+            && let Ok(ver) = get_version(path)
+        {
+            if ver.is_restorable() {
+                let unlock_file_model = unlock_file_model.as_ref();
+                match strip_protection(path) {
+                    Ok(()) => {
+                        //After attempting to unlock it update the model with the new protected status
+                        //by verifying it in the file on disk
+                        if let Some(mut row_data) = unlock_file_model.row_data(idxu) {
+                            match is_protected(&path) {
+                                Ok(lck) => {
+                                    row_data.locked = lck;
+                                    unlock_file_model.set_row_data(idxu, row_data);
                                 }
-                            }
-                        }
-                        Err(e) => {
-                            error!("Failed to unlock file {}. Reason: {e}", path.display());
-                            if let Some(mut row_data) = unlock_file_model.row_data(idx as usize) {
-                                if let Some(unlock_ui) = unlock_ui.upgrade() {
-                                    row_data.note = "Failed to unlock file".into();
-                                    unlock_file_model.set_row_data(idx as usize, row_data);
-                                    unlock_ui.invoke_slide_over(idx);
+                                Err(e) => {
+                                    error!(
+                                        "Unable to confirm file {} was unlocked. Reason: {e}",
+                                        path.display()
+                                    );
+                                    if let Some(unlock_ui) = unlock_ui.upgrade() {
+                                        row_data.note =
+                                            "Unable to confirm file was unlocked".into();
+                                        unlock_file_model.set_row_data(idxu, row_data);
+                                        unlock_ui.invoke_slide_over(idx);
+                                    }
                                 }
                             }
                         }
                     }
-                } else if let Some(unlock_ui) = unlock_ui.upgrade() {
-                    unlock_ui.invoke_slide_over(idx);
+                    Err(e) => {
+                        error!("Failed to unlock file {}. Reason: {e}", path.display());
+                        if let Some(mut row_data) = unlock_file_model.row_data(idxu)
+                            && let Some(unlock_ui) = unlock_ui.upgrade()
+                        {
+                            row_data.note = "Failed to unlock file".into();
+                            unlock_file_model.set_row_data(idxu, row_data);
+                            unlock_ui.invoke_slide_over(idx);
+                        }
+                    }
                 }
+            } else if let Some(unlock_ui) = unlock_ui.upgrade() {
+                unlock_ui.invoke_slide_over(idx);
             }
         } //else display some sort of toast message with the error?
     });
@@ -116,9 +117,13 @@ fn main() -> Result<(), slint::PlatformError> {
         .map(|_i| Timer::default())
         .collect();
     ui.on_slide_over(move |idx| {
+        // Slint doesn't have a usize or unsigned int type, so it's either an i32
+        // or a float. It uses an i32 for indexing in a for loop...but then I need that
+        // as a usize to access the vector
+        #[allow(clippy::cast_sign_loss)]
         let idx = idx as usize;
         if idx >= info_timers.len() {
-            info_timers.extend((info_timers.len()..idx + 1).map(|_| Timer::default()));
+            info_timers.extend((info_timers.len()..=idx).map(|_| Timer::default()));
         }
         let info_file_model_stop = info_file_model_start.clone();
         let info_file_model_start = info_file_model_start.as_ref();
