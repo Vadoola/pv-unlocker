@@ -1,11 +1,13 @@
 #![windows_subsystem = "windows"]
 
+mod setup;
+
 use ab_versions::{get_version, is_protected, strip_protection};
 use clap::Parser;
+use directories::ProjectDirs;
 use log::error;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rfd::FileDialog;
-use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger, WriteLogger};
 use slint::{Model, ModelRc, Timer, TimerMode, VecModel};
 use std::{
     borrow::BorrowMut, cell::RefCell, collections::HashMap, fs::File, path::PathBuf, rc::Rc,
@@ -20,15 +22,7 @@ struct Args {
 slint::include_modules!();
 
 fn main() -> Result<(), slint::PlatformError> {
-    CombinedLogger::init(vec![
-        SimpleLogger::new(LevelFilter::Warn, Config::default()),
-        WriteLogger::new(
-            LevelFilter::Info,
-            Config::default(),
-            File::create("pv-unlocker.log").expect("Failed to create log file"),
-        ),
-    ])
-    .expect("Failed to create logging infrastructure");
+    setup::logging();
 
     let args = Args::parse_from(wild::args());
     let files = Rc::new(RefCell::new(process_paths(args.files)));

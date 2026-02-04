@@ -19,13 +19,21 @@ clap = { version = "4.5", features = ["derive"] }
 rayon = "1.11"
 wild = "2.2"
 rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
+directories = "6.0"
 log = "0.4"
-simplelog = "0.12.2"
-#tracing = "0.1"
-#tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+flexi_logger = "0.31"
 
 #is it worth swapping the fluent style icons for lucide?
 #lucide-slint = "0.1.4"
+
+[target.'cfg(unix)'.dependencies]
+syslog = "7.0.0"
+systemd-journal-logger = "2.2.2"
+
+#Not using Windows Event Logging for now. See note in setup::logging Windows section for more information
+#[target.'cfg(windows)'.dependencies]
+#win_etw_macros = "0.1"
+#win_etw_provider = "0.1"
 
 [build-dependencies]
 slint-build = "1.14.1"
